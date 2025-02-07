@@ -9,18 +9,32 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [fileTypeFilter, setFileTypeFilter] = useState('');
+  const [hasMembership, setHasMembership] = useState(false);
   const navigate = useNavigate();
 
-  const userId = localStorage.getItem('user'); // Directly retrieving user ID from localStorage
+  const userId = localStorage.getItem('user'); // Retrieve user ID from localStorage
 
   useEffect(() => {
-    fetchStats();
-    fetchFiles();
-  }, []);
+    fetchMembershipStatus();
+    if (hasMembership) {
+      fetchStats();
+      fetchFiles();
+    }
+  }, [hasMembership]);
+
+  const fetchMembershipStatus = async () => {
+    try {
+      if (!userId) return;
+      const res = await axios.get(`http://localhost:5000/api/membership/${userId}`);
+      setHasMembership(res.data.hasMembership);
+    } catch (error) {
+      console.error('Error fetching membership status:', error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/stats');
+      const res = await axios.get(`http://localhost:5000/api/files/user/${userId}/stats`);
       setStats(res.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -29,7 +43,7 @@ const Dashboard = () => {
 
   const fetchFiles = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/files');
+      const res = await axios.get(`http://localhost:5000/api/files/user/${userId}`);
       setFiles(res.data);
     } catch (error) {
       console.error('Error fetching files:', error);
@@ -85,7 +99,6 @@ const Dashboard = () => {
 
   const handleDeleteAccount = async () => {
     try {
-      const userId = localStorage.getItem('user');
       if (!userId) {
         alert('User ID not found.');
         return;
@@ -111,54 +124,62 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <h2>Dashboard</h2>
-      <div className="stats-section">
-        <h3>Statistics</h3>
-        <p><strong>Total Files:</strong> {stats.totalFiles}</p>
-        <p><strong>Storage Used:</strong> {stats.storageUsed} MB / 20 GB</p>
-      </div>
-      <h3>Manage Your Files</h3>
-      <div className="file-management-section">
-        <div>
-          <input type="file" onChange={handleFileChange} />
-          <button onClick={handleFileUpload}>Upload File</button>
+      {!hasMembership ? (
+        <div className="membership-offer">
+          <h3>Accédez à 20GB de stockage pour seulement 20€</h3>
+          <button onClick={() => navigate('/payment-verification')}>Acheter maintenant</button>
         </div>
-        <div className='filters'>
-          <input
-            type="text"
-            placeholder="Search files by name"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <select onChange={(e) => setSortBy(e.target.value)}>
-            <option value="date">Sort by Date</option>
-            <option value="size">Sort by Size</option>
-          </select>
-          <select onChange={(e) => setFileTypeFilter(e.target.value)}>
-            <option value="">All Formats</option>
-            <option value=".pdf">PDF</option>
-            <option value=".jpg">JPG</option>
-            <option value=".png">PNG</option>
-          </select>
+      ) : (
+      <div>
+        <div className="stats-section">
+          <h3>Statistics</h3>
+          <p><strong>Total Files:</strong> {stats.totalFiles}</p>
+          <p><strong>Storage Used:</strong> {stats.storageUsed} MB / 20 GB</p>
         </div>
-        <ul>
-          {filteredFiles.length > 0 ? (
-            filteredFiles.map(file => (
-              <li key={file._id}>
-                <span>{file.fileName}</span>
-                <button onClick={() => handleDownloadFile(file._id, file.fileName)}>Download</button>
-                <button className="delete-btn" onClick={() => handleDeleteFile(file._id)}>Delete</button>
-              </li>
-            ))
-          ) : (
-            <p>No files uploaded yet.</p>
-          )}
-        </ul>
-      </div>
-      <div className="account-settings">
-        <h3>Account Settings</h3>
-        <button className="delete-account-btn" onClick={handleDeleteAccount}>Delete Account</button>
-      </div>
-    </div>
+        <h3>Manage Your Files</h3>
+        <div className="file-management-section">
+          <div>
+            <input type="file" onChange={handleFileChange} />
+            <button onClick={handleFileUpload}>Upload File</button>
+          </div>
+          <div className='filters'>
+            <input
+              type="text"
+              placeholder="Search files by name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <select onChange={(e) => setSortBy(e.target.value)}>
+              <option value="date">Sort by Date</option>
+              <option value="size">Sort by Size</option>
+            </select>
+            <select onChange={(e) => setFileTypeFilter(e.target.value)}>
+              <option value="">All Formats</option>
+              <option value=".pdf">PDF</option>
+              <option value=".jpg">JPG</option>
+              <option value=".png">PNG</option>
+            </select>
+          </div>
+          <ul>
+            {filteredFiles.length > 0 ? (
+              filteredFiles.map(file => (
+                <li key={file._id}>
+                  <span>{file.fileName}</span>
+                  <button onClick={() => handleDownloadFile(file._id, file.fileName)}>Download</button>
+                  <button className="delete-btn" onClick={() => handleDeleteFile(file._id)}>Delete</button>
+                </li>
+              ))
+            ) : (
+              <p>No files uploaded yet.</p>
+            )}
+          </ul>
+        </div>
+        <div className="account-settings">
+          <h3>Account Settings</h3>
+          <button className="delete-account-btn" onClick={handleDeleteAccount}>Delete Account</button>
+        </div>
+      </div>)}
+    </div> 
   );
 };
 

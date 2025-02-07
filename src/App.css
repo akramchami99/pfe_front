@@ -1,5 +1,9 @@
+body{
+  margin: 0;
+  
+}
 #root {
-  min-height: 80vh;
+  height: 93vh;
   margin: 0 auto;
   padding: 2rem;
   display: flex;
@@ -7,22 +11,27 @@
   align-items: center;
   justify-content: center;
   font-family:Verdana, Geneva, Tahoma, sans-serif ;
+  background-image: url('./assets/background.jpg');
+  
 }
 
-.login--form, .register--form{
+.login--form, .register--form, .payment-verification{
   display: flex;
   flex-direction: column;
   gap: 1rem;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(2px);
+  box-shadow: 0px 0px 11px 0px rgba(0,0,0,0.75);
+
 }
 
-.login--form > input, .register--form > input {
+.login--form > input, .register--form > input, .modal > input, .payment-verification > input {
   height: 2rem;
   width: 15rem;
 }
 
-.login--form > button, .register--form > button{
+.login--form > button, .register--form > button, .modal > button, .payment-verification > button{
   height: 2rem;
   width: 8rem;
 }
@@ -43,4 +52,18 @@
   margin-top: 1rem;
   display: flex;
   gap: .5rem;
+}
+
+.modal{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dashboard-container, .login--form, .register--form, .payment-verification{
+  padding: 2rem;
+  padding-bottom: 3rem;
+  background-color: rgba(255, 255, 255, 0.863);
+  border-radius: .5rem;
 }
